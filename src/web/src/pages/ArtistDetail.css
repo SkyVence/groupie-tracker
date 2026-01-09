@@ -56,10 +56,38 @@
     gap: 1rem;
     font-size: 1.2rem;
     color: #888;
+    margin-bottom: 2rem;
 }
 
 .artist-meta span {
     color: #888;
+}
+
+.artist-members {
+    margin-top: 1.5rem;
+}
+
+.artist-members h3 {
+    font-size: 1.3rem;
+    color: #fff;
+    margin-bottom: 0.75rem;
+}
+
+.artist-members ul {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.artist-members ul li {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    color: #ccc;
+    font-size: 0.95rem;
 }
 
 .artist-content {

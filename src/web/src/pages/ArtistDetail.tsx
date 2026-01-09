@@ -1,12 +1,47 @@
 import { useParams, Link } from "react-router-dom";
-import { artists } from "../data/artists";
+import { useState, useEffect } from "react";
+import { apiService, type ApiArtist, type Relation } from "../services/api";
+import ConcertMap from "../components/ConcertMap";
 import "./ArtistDetail.css";
 
 function ArtistDetail() {
   const { id } = useParams();
-  const artist = artists.find((a) => a.id === Number(id));
+  const [artist, setArtist] = useState<ApiArtist | null>(null);
+  const [relations, setRelations] = useState<Relation | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  if (!artist) {
+  useEffect(() => {
+    const fetchArtistDetails = async () => {
+      if (!id) return;
+
+      try {
+        setLoading(true);
+        const data = await apiService.getArtistWithDetails(Number(id));
+        setArtist(data.artist);
+        setRelations(data.relations || null);
+      } catch (err) {
+        setError("Artiste non trouvé");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchArtistDetails();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="container">
+        <div style={{ textAlign: "center", padding: "4rem" }}>
+          <h2>Chargement...</h2>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !artist) {
     return (
       <div className="container">
         <div className="not-found">
@@ -18,6 +53,16 @@ function ArtistDetail() {
       </div>
     );
   }
+
+  // Préparer les concerts à partir des relations
+  const concerts = relations
+    ? Object.entries(relations.datesLocations).flatMap(([location, dates]) =>
+        dates.map((date) => ({
+          date,
+          location: location.replace(/-/g, ", ").replace(/_/g, " "),
+        }))
+      )
+    : [];
 
   return (
     <div className="container">
@@ -33,42 +78,43 @@ function ArtistDetail() {
           <div className="artist-main-info">
             <h1>{artist.name}</h1>
             <div className="artist-meta">
-              <span>{artist.members} membres</span>
+              <span>{artist.members.length} membres</span>
               <span>•</span>
               <span>Créé en {artist.creationDate}</span>
+              <span>•</span>
+              <span>Premier album: {artist.firstAlbum}</span>
+            </div>
+            <div className="artist-members">
+              <h3>Membres:</h3>
+              <ul>
+                {artist.members.map((member, idx) => (
+                  <li key={idx}>{member}</li>
+                ))}
+              </ul>
             </div>
           </div>
         </div>
 
         <div className="artist-content">
-          <section className="description-section">
-            <h2>À propos</h2>
-            <p>{artist.description}</p>
-          </section>
+          {concerts.length > 0 && (
+            <section className="concerts-section">
+              <h2>Dates de concerts ({concerts.length})</h2>
+              <div className="concerts-list">
+                {concerts.map((concert, index) => (
+                  <div key={index} className="concert-card">
+                    <div className="concert-date">
+                      <span className="date-day">{concert.date}</span>
+                    </div>
+                    <div className="concert-info">
+                      <h3>{concert.location}</h3>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
-          <section className="concerts-section">
-            <h2>Prochains concerts</h2>
-            <div className="concerts-list">
-              {artist.concerts.map((concert, index) => (
-                <div key={index} className="concert-card">
-                  <div className="concert-date">
-                    <span className="date-day">
-                      {concert.date.split("/")[0]}
-                    </span>
-                    <span className="date-month">
-                      {new Date(
-                        concert.date.split("/").reverse().join("-")
-                      ).toLocaleDateString("fr-FR", { month: "short" })}
-                    </span>
-                  </div>
-                  <div className="concert-info">
-                    <h3>{concert.venue}</h3>
-                    <p>{concert.location}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
+          {relations && <ConcertMap artistName={artist.name} relations={relations} />}
         </div>
       </div>
     </div>
