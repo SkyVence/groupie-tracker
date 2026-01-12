@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import type { ApiArtist, Relation } from "../services/api";
-import "./SearchBar.css";
 
 interface SearchSuggestion {
   type: "artist" | "member" | "location" | "creation-date" | "first-album";
@@ -25,10 +24,7 @@ function SearchBar({ artists, relations }: SearchBarProps) {
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (
-        searchRef.current &&
-        !searchRef.current.contains(event.target as Node)
-      ) {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         setShowSuggestions(false);
       }
     }
@@ -48,7 +44,6 @@ function SearchBar({ artists, relations }: SearchBarProps) {
     const newSuggestions: SearchSuggestion[] = [];
 
     artists.forEach((artist) => {
-      // Search by artist name
       if (artist.name.toLowerCase().includes(term)) {
         newSuggestions.push({
           type: "artist",
@@ -58,7 +53,6 @@ function SearchBar({ artists, relations }: SearchBarProps) {
         });
       }
 
-      // Search by members
       artist.members.forEach((member) => {
         if (member.toLowerCase().includes(term)) {
           newSuggestions.push({
@@ -70,7 +64,6 @@ function SearchBar({ artists, relations }: SearchBarProps) {
         }
       });
 
-      // Search by creation date
       if (artist.creationDate.toString().includes(term)) {
         newSuggestions.push({
           type: "creation-date",
@@ -80,7 +73,6 @@ function SearchBar({ artists, relations }: SearchBarProps) {
         });
       }
 
-      // Search by first album
       if (artist.firstAlbum.toLowerCase().includes(term)) {
         newSuggestions.push({
           type: "first-album",
@@ -90,23 +82,12 @@ function SearchBar({ artists, relations }: SearchBarProps) {
         });
       }
 
-      // Search by locations
       const artistRelations = relations.find((r) => r.id === artist.id);
       if (artistRelations) {
         Object.keys(artistRelations.datesLocations).forEach((location) => {
-          const formattedLocation = location
-            .replace(/-/g, ", ")
-            .replace(/_/g, " ");
+          const formattedLocation = location.replace(/-/g, ", ").replace(/_/g, " ");
           if (formattedLocation.toLowerCase().includes(term)) {
-            // Avoid duplicates
-            if (
-              !newSuggestions.some(
-                (s) =>
-                  s.type === "location" &&
-                  s.value === formattedLocation &&
-                  s.artistId === artist.id
-              )
-            ) {
+            if (!newSuggestions.some((s) => s.type === "location" && s.value === formattedLocation && s.artistId === artist.id)) {
               newSuggestions.push({
                 type: "location",
                 value: formattedLocation,
@@ -119,7 +100,6 @@ function SearchBar({ artists, relations }: SearchBarProps) {
       }
     });
 
-    // Limit suggestions to 10
     setSuggestions(newSuggestions.slice(0, 10));
     setShowSuggestions(true);
     setSelectedIndex(-1);
@@ -136,9 +116,7 @@ function SearchBar({ artists, relations }: SearchBarProps) {
 
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      setSelectedIndex((prev) =>
-        prev < suggestions.length - 1 ? prev + 1 : prev
-      );
+      setSelectedIndex((prev) => (prev < suggestions.length - 1 ? prev + 1 : prev));
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       setSelectedIndex((prev) => (prev > 0 ? prev - 1 : -1));
@@ -151,103 +129,89 @@ function SearchBar({ artists, relations }: SearchBarProps) {
   };
 
   const getTypeLabel = (type: SearchSuggestion["type"]): string => {
-    switch (type) {
-      case "artist":
-        return "artist/band";
-      case "member":
-        return "member";
-      case "location":
-        return "location";
-      case "creation-date":
-        return "creation date";
-      case "first-album":
-        return "first album";
-      default:
-        return "";
-    }
-  };
-
-  const getTypeIcon = (type: SearchSuggestion["type"]): string => {
-    switch (type) {
-      case "artist":
-        return "🎸";
-      case "member":
-        return "👤";
-      case "location":
-        return "📍";
-      case "creation-date":
-        return "📅";
-      case "first-album":
-        return "💿";
-      default:
-        return "";
-    }
+    const labels = {
+      artist: "artiste",
+      member: "membre",
+      location: "lieu",
+      "creation-date": "création",
+      "first-album": "album",
+    };
+    return labels[type];
   };
 
   return (
-    <div className="search-container" ref={searchRef}>
-      <div className="search-bar">
-        <span className="search-icon">🔍</span>
+    <div className="relative w-full max-w-xl mx-auto" ref={searchRef}>
+      {/* Search Input */}
+      <div className="relative">
+        <svg
+          className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          />
+        </svg>
         <input
           type="text"
-          placeholder="Search for artists, members, dates..."
+          placeholder="Rechercher artistes, membres, lieux..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           onKeyDown={handleKeyDown}
           onFocus={() => searchTerm && setShowSuggestions(true)}
-          className="search-input"
+          className="w-full pl-12 pr-10 py-3 bg-dark-700 border-2 border-dark-500 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-accent transition-colors"
         />
         {searchTerm && (
           <button
-            className="clear-button"
             onClick={() => {
               setSearchTerm("");
               setSuggestions([]);
               setShowSuggestions(false);
             }}
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
           >
-            ✕
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         )}
       </div>
 
+      {/* Suggestions Dropdown */}
       {showSuggestions && suggestions.length > 0 && (
-        <div className="suggestions-dropdown">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-dark-700 border border-dark-500 rounded-xl overflow-hidden shadow-xl z-50">
           {suggestions.map((suggestion, index) => (
             <div
               key={`${suggestion.type}-${suggestion.value}-${suggestion.artistId}-${index}`}
-              className={`suggestion-item ${
-                index === selectedIndex ? "selected" : ""
+              className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors ${
+                index === selectedIndex ? "bg-dark-600" : "hover:bg-dark-600"
               }`}
               onClick={() => handleSuggestionClick(suggestion)}
             >
-              <span className="suggestion-icon">
-                {getTypeIcon(suggestion.type)}
-              </span>
-              <div className="suggestion-content">
-                <span className="suggestion-value">{suggestion.value}</span>
-                <span className="suggestion-meta">
-                  <span className="suggestion-type">
-                    {getTypeLabel(suggestion.type)}
-                  </span>
+              <div className="flex-1 min-w-0">
+                <p className="text-white font-medium truncate">{suggestion.value}</p>
+                <p className="text-sm text-gray-500">
+                  <span className="text-accent">{getTypeLabel(suggestion.type)}</span>
                   {suggestion.type !== "artist" && (
-                    <>
-                      <span className="separator">•</span>
-                      <span className="suggestion-artist">
-                        {suggestion.artistName}
-                      </span>
-                    </>
+                    <span> • {suggestion.artistName}</span>
                   )}
-                </span>
+                </p>
               </div>
             </div>
           ))}
         </div>
       )}
 
+      {/* No results */}
       {showSuggestions && searchTerm && suggestions.length === 0 && (
-        <div className="suggestions-dropdown">
-          <div className="no-results">No results found</div>
+        <div className="absolute top-full left-0 right-0 mt-2 bg-dark-700 border border-dark-500 rounded-xl overflow-hidden shadow-xl z-50">
+          <div className="px-4 py-6 text-center text-gray-500">
+            Aucun résultat trouvé
+          </div>
         </div>
       )}
     </div>
