@@ -141,7 +141,7 @@ The backend proxies requests to the Groupie Trackers API:
 ## 👥 Authors
 
 - **Antoine Mathié** - [GitHub](https://github.com/SkyVence)
-- **Paolo Antonini**
+- **Paolo Antonini** - [GitHub](https://github.com/PayExe)
 
 ## 📄 License
 
